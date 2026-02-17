@@ -55,6 +55,14 @@ class WP_Product_Plugin_Admin {
 			'wp_product_plugin_main_section'
 		);
 
+		add_settings_field(
+			'enable_enhanced_styles',
+			__( 'Enhanced Styles', 'wp-product-plugin' ),
+			array( $this, 'render_enhanced_styles_field' ),
+			'wp-product-plugin',
+			'wp_product_plugin_main_section'
+		);
+
 		add_settings_section(
 			'wp_product_plugin_info_section',
 			__( 'Information', 'wp-product-plugin' ),
@@ -98,6 +106,9 @@ class WP_Product_Plugin_Admin {
 
 			$sanitized['product_id'] = $product_id;
 		}
+
+		// Sanitize enhanced styles option.
+		$sanitized['enable_enhanced_styles'] = isset( $input['enable_enhanced_styles'] ) ? 1 : 0;
 
 		// Preserve last_created_at.
 		$old_settings = get_option( 'wp_product_plugin_settings', array() );
@@ -155,6 +166,29 @@ class WP_Product_Plugin_Admin {
 		/>
 		<p class="description">
 			<?php esc_html_e( 'Enter a product ID between 1 and 20 from FakeStore API.', 'wp-product-plugin' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Render enhanced styles field.
+	 */
+	public function render_enhanced_styles_field() {
+		$settings = get_option( 'wp_product_plugin_settings', array() );
+		$enabled = isset( $settings['enable_enhanced_styles'] ) ? $settings['enable_enhanced_styles'] : 1;
+		?>
+		<label>
+			<input
+				type="checkbox"
+				name="wp_product_plugin_settings[enable_enhanced_styles]"
+				id="enable_enhanced_styles"
+				value="1"
+				<?php checked( $enabled, 1 ); ?>
+			/>
+			<?php esc_html_e( 'Enable enhanced WordPress 6 compatible styles', 'wp-product-plugin' ); ?>
+		</label>
+		<p class="description">
+			<?php esc_html_e( 'Modern card design with shadows, hover effects, and responsive layout.', 'wp-product-plugin' ); ?>
 		</p>
 		<?php
 	}

@@ -1,0 +1,380 @@
+/**
+ * WP Product Plugin - Enhanced Styles (WordPress 6 Compatible)
+ *
+ * Modern design with block editor compatibility
+ *
+ * @package WP_Product_Plugin
+ */
+
+/* ==========================================================================
+   Product Card - Enhanced Design
+   ========================================================================== */
+
+.wp-product-plugin-card {
+	max-width: 800px;
+	margin: 2rem auto;
+	background: #ffffff;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+	            0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	border: 1px solid #e5e7eb;
+}
+
+.wp-product-plugin-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+	            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Product Image Section */
+.wp-product-plugin-card-image {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	padding: 3rem 2rem;
+	text-align: center;
+	position: relative;
+	overflow: hidden;
+}
+
+.wp-product-plugin-card-image::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+	pointer-events: none;
+}
+
+.wp-product-plugin-card-image img {
+	max-width: 100%;
+	height: auto;
+	max-height: 400px;
+	object-fit: contain;
+	filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.2));
+	transition: transform 0.3s ease;
+	position: relative;
+	z-index: 1;
+}
+
+.wp-product-plugin-card:hover .wp-product-plugin-card-image img {
+	transform: scale(1.05);
+}
+
+/* Content Section */
+.wp-product-plugin-card-content {
+	padding: 2rem;
+}
+
+/* Title */
+.wp-product-plugin-card-title {
+	margin: 0 0 1.5rem 0;
+	font-size: 1.875rem;
+	line-height: 1.3;
+	color: #1f2937;
+	font-weight: 700;
+	letter-spacing: -0.025em;
+}
+
+/* Meta Information */
+.wp-product-plugin-card-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5rem;
+	margin-bottom: 1.5rem;
+	padding-bottom: 1.5rem;
+	border-bottom: 2px solid #f3f4f6;
+}
+
+.wp-product-plugin-card-category,
+.wp-product-plugin-card-rating {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+	color: #6b7280;
+	background: #f9fafb;
+	padding: 0.5rem 1rem;
+	border-radius: 9999px;
+	font-weight: 500;
+}
+
+.wp-product-plugin-card-category strong,
+.wp-product-plugin-card-rating strong {
+	color: #374151;
+}
+
+/* Price - Featured */
+.wp-product-plugin-card-price {
+	font-size: 2.25rem;
+	font-weight: 800;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	margin-bottom: 1.5rem;
+	display: inline-block;
+}
+
+.wp-product-plugin-card-price strong {
+	font-weight: 400;
+	font-size: 1rem;
+	color: #6b7280;
+	-webkit-text-fill-color: #6b7280;
+}
+
+/* Description */
+.wp-product-plugin-card-description {
+	margin: 1.5rem 0;
+	line-height: 1.75;
+	color: #4b5563;
+	font-size: 1rem;
+}
+
+.wp-product-plugin-card-description p {
+	margin-bottom: 1rem;
+}
+
+/* View Post Link */
+.wp-product-plugin-card-link {
+	margin-top: 2rem;
+	padding-top: 2rem;
+	border-top: 2px solid #f3f4f6;
+}
+
+.wp-product-plugin-view-post {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.875rem 2rem;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: #ffffff;
+	text-decoration: none;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 1rem;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+}
+
+.wp-product-plugin-view-post:hover {
+	color: #ffffff;
+	transform: translateY(-2px);
+	box-shadow: 0 10px 15px -3px rgba(102, 126, 234, 0.4);
+}
+
+.wp-product-plugin-view-post:active {
+	transform: translateY(0);
+}
+
+/* ==========================================================================
+   Random Product Section
+   ========================================================================== */
+
+.wp-product-plugin-random-container {
+	margin: 2rem auto;
+	max-width: 800px;
+}
+
+.wp-product-plugin-random-button {
+	padding: 1rem 2.5rem;
+	font-size: 1.125rem;
+	font-weight: 700;
+	color: #ffffff;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	border: none;
+	border-radius: 12px;
+	cursor: pointer;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+	position: relative;
+	overflow: hidden;
+}
+
+.wp-product-plugin-random-button::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	transition: left 0.5s ease;
+}
+
+.wp-product-plugin-random-button:hover::before {
+	left: 100%;
+}
+
+.wp-product-plugin-random-button:hover:not(:disabled) {
+	transform: translateY(-2px);
+	box-shadow: 0 10px 15px -3px rgba(102, 126, 234, 0.4);
+}
+
+.wp-product-plugin-random-button:active:not(:disabled) {
+	transform: translateY(0);
+}
+
+.wp-product-plugin-random-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.wp-product-plugin-random-result {
+	margin-top: 2rem;
+}
+
+/* Loading Animation */
+.wp-product-plugin-loading {
+	text-align: center;
+	padding: 2rem;
+	color: #6b7280;
+	font-style: italic;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+}
+
+.wp-product-plugin-loading::before {
+	content: '';
+	width: 24px;
+	height: 24px;
+	border: 3px solid #e5e7eb;
+	border-top-color: #667eea;
+	border-radius: 50%;
+	animation: wp-product-plugin-spin 0.8s linear infinite;
+}
+
+@keyframes wp-product-plugin-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Error Messages
+   ========================================================================== */
+
+.wp-product-plugin-error {
+	padding: 1rem 1.5rem;
+	margin: 2rem auto;
+	max-width: 800px;
+	background: #fef2f2;
+	color: #991b1b;
+	border-left: 4px solid #dc2626;
+	border-radius: 8px;
+	font-weight: 500;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+	.wp-product-plugin-card {
+		margin: 1rem;
+		border-radius: 8px;
+	}
+
+	.wp-product-plugin-card-content {
+		padding: 1.5rem;
+	}
+
+	.wp-product-plugin-card-title {
+		font-size: 1.5rem;
+	}
+
+	.wp-product-plugin-card-price {
+		font-size: 1.875rem;
+	}
+
+	.wp-product-plugin-card-image {
+		padding: 2rem 1rem;
+	}
+
+	.wp-product-plugin-card-image img {
+		max-height: 250px;
+	}
+
+	.wp-product-plugin-card-meta {
+		gap: 0.75rem;
+	}
+
+	.wp-product-plugin-random-button {
+		width: 100%;
+		padding: 1rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.wp-product-plugin-card-title {
+		font-size: 1.25rem;
+	}
+
+	.wp-product-plugin-card-price {
+		font-size: 1.5rem;
+	}
+
+	.wp-product-plugin-view-post {
+		display: block;
+		text-align: center;
+		width: 100%;
+	}
+}
+
+/* ==========================================================================
+   WordPress Block Editor Compatibility
+   ========================================================================== */
+
+.editor-styles-wrapper .wp-product-plugin-card {
+	max-width: 100%;
+}
+
+/* Dark Mode Support (WordPress 6.3+) */
+@media (prefers-color-scheme: dark) {
+	.wp-product-plugin-card {
+		background: #1f2937;
+		border-color: #374151;
+	}
+
+	.wp-product-plugin-card-title {
+		color: #f9fafb;
+	}
+
+	.wp-product-plugin-card-description {
+		color: #d1d5db;
+	}
+
+	.wp-product-plugin-card-category,
+	.wp-product-plugin-card-rating {
+		background: #374151;
+		color: #d1d5db;
+	}
+
+	.wp-product-plugin-card-category strong,
+	.wp-product-plugin-card-rating strong {
+		color: #f9fafb;
+	}
+
+	.wp-product-plugin-card-meta {
+		border-color: #374151;
+	}
+
+	.wp-product-plugin-card-link {
+		border-color: #374151;
+	}
+}
+
+/* Print Styles */
+@media print {
+	.wp-product-plugin-random-button,
+	.wp-product-plugin-card-link {
+		display: none;
+	}
+
+	.wp-product-plugin-card {
+		box-shadow: none;
+		border: 1px solid #000;
+	}
+}

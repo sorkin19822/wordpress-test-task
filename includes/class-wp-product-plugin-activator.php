@@ -35,8 +35,9 @@ class WP_Product_Plugin_Activator {
 
 		// Set default options.
 		$default_settings = array(
-			'product_id'     => 1,
-			'last_created_at' => '',
+			'product_id'              => 1,
+			'last_created_at'         => '',
+			'enable_enhanced_styles'  => 1, // Enable by default
 		);
 		add_option( 'wp_product_plugin_settings', $default_settings );
 	}

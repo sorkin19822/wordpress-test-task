@@ -137,12 +137,26 @@ class WP_Product_Plugin {
 	 * Enqueue public-facing assets.
 	 */
 	public function enqueue_public_assets() {
-		wp_enqueue_style(
-			'wp-product-plugin-public',
-			WP_PRODUCT_PLUGIN_URL . 'assets/css/public.css',
-			array(),
-			WP_PRODUCT_PLUGIN_VERSION
-		);
+		// Get settings to check if enhanced styles are enabled.
+		$settings = get_option( 'wp_product_plugin_settings', array() );
+		$enhanced_styles = isset( $settings['enable_enhanced_styles'] ) ? $settings['enable_enhanced_styles'] : 1;
+
+		// Enqueue appropriate stylesheet.
+		if ( $enhanced_styles ) {
+			wp_enqueue_style(
+				'wp-product-plugin-enhanced',
+				WP_PRODUCT_PLUGIN_URL . 'assets/css/enhanced.css',
+				array(),
+				WP_PRODUCT_PLUGIN_VERSION
+			);
+		} else {
+			wp_enqueue_style(
+				'wp-product-plugin-public',
+				WP_PRODUCT_PLUGIN_URL . 'assets/css/public.css',
+				array(),
+				WP_PRODUCT_PLUGIN_VERSION
+			);
+		}
 
 		wp_enqueue_script(
 			'wp-product-plugin-public',

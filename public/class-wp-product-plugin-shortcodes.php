@@ -120,25 +120,27 @@ class WP_Product_Plugin_Shortcodes {
 					<?php echo esc_html( $product['title'] ); ?>
 				</h3>
 
-				<?php if ( ! empty( $product['category'] ) ) : ?>
-					<div class="wp-product-plugin-card-category">
-						<strong><?php esc_html_e( 'Category:', 'wp-product-plugin' ); ?></strong>
-						<?php echo esc_html( ucfirst( $product['category'] ) ); ?>
-					</div>
-				<?php endif; ?>
+				<div class="wp-product-plugin-card-meta">
+					<?php if ( ! empty( $product['category'] ) ) : ?>
+						<div class="wp-product-plugin-card-category">
+							<strong><?php esc_html_e( 'Category:', 'wp-product-plugin' ); ?></strong>
+							<?php echo esc_html( ucfirst( $product['category'] ) ); ?>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( ! empty( $product['rating'] ) ) : ?>
+						<div class="wp-product-plugin-card-rating">
+							<strong><?php esc_html_e( 'Rating:', 'wp-product-plugin' ); ?></strong>
+							⭐ <?php echo esc_html( $product['rating']['rate'] ); ?>/5
+							(<?php echo esc_html( $product['rating']['count'] ); ?> <?php esc_html_e( 'reviews', 'wp-product-plugin' ); ?>)
+						</div>
+					<?php endif; ?>
+				</div>
 
 				<div class="wp-product-plugin-card-price">
 					<strong><?php esc_html_e( 'Price:', 'wp-product-plugin' ); ?></strong>
 					$<?php echo esc_html( number_format( $product['price'], 2 ) ); ?>
 				</div>
-
-				<?php if ( ! empty( $product['rating'] ) ) : ?>
-					<div class="wp-product-plugin-card-rating">
-						<strong><?php esc_html_e( 'Rating:', 'wp-product-plugin' ); ?></strong>
-						<?php echo esc_html( $product['rating']['rate'] ); ?>/5
-						(<?php echo esc_html( $product['rating']['count'] ); ?> <?php esc_html_e( 'reviews', 'wp-product-plugin' ); ?>)
-					</div>
-				<?php endif; ?>
 
 				<div class="wp-product-plugin-card-description">
 					<?php echo wp_kses_post( wpautop( $product['description'] ) ); ?>
