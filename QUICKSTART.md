@@ -80,7 +80,7 @@ Your plugin is working! Check out the full documentation in README.md.
 
 ### 1. Download Plugin
 
-1. Go to [GitHub Releases](https://github.com/yourusername/wp-product-plugin/releases)
+1. Go to [GitHub Releases](https://github.com/sorkin19822/wordpress-test-task/releases)
 2. Download **wp-product-plugin.zip**
 
 ### 2. Install Plugin
@@ -194,7 +194,7 @@ This will show product #5 instead of the default from settings.
 
 ## Support
 
-- **Issues**: https://github.com/yourusername/wp-product-plugin/issues
+- **Issues**: https://github.com/sorkin19822/wordpress-test-task/issues
 - **Documentation**: See README.md
 - **FakeStore API**: https://fakestoreapi.com
 

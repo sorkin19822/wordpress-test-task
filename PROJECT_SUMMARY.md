@@ -374,7 +374,7 @@ Display product card with post link
 
 ## Repository Information
 
-**Repository:** https://github.com/yourusername/wp-product-plugin
+**Repository:** https://github.com/sorkin19822/wordpress-test-task
 **License:** GPL-2.0+
 **Version:** 1.0.0
 **Author:** WordPress Developer Test Assignment

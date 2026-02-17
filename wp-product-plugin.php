@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: WP Product Plugin
- * Plugin URI: https://github.com/yourusername/wp-product-plugin
+ * Plugin URI: https://github.com/sorkin19822/wordpress-test-task
  * Description: Integration with FakeStore API to display products via shortcodes with AJAX support and Custom Post Type storage.
  * Version: 1.0.0
  * Author: Oleksandr
- * Author URI: https://github.com/yourusername
+ * Author URI: https://github.com/sorkin19822
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: wp-product-plugin

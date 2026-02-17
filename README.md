@@ -29,7 +29,7 @@ A WordPress plugin that integrates with the FakeStore API to display products vi
 
 ### From Release (Recommended)
 
-1. Download the latest `wp-product-plugin.zip` from [Releases](https://github.com/yourusername/wp-product-plugin/releases)
+1. Download the latest `wp-product-plugin.zip` from [Releases](https://github.com/sorkin19822/wordpress-test-task/releases)
 2. Go to WordPress admin → **Plugins** → **Add New** → **Upload Plugin**
 3. Choose the downloaded ZIP file
 4. Click **Install Now**
@@ -39,7 +39,7 @@ A WordPress plugin that integrates with the FakeStore API to display products vi
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/wp-product-plugin.git
+   git clone https://github.com/sorkin19822/wordpress-test-task.git
    ```
 
 2. Start Docker environment:
@@ -220,11 +220,11 @@ This plugin is licensed under the GPL v2 or later.
 
 ## Support
 
-For bug reports and feature requests, please use [GitHub Issues](https://github.com/yourusername/wp-product-plugin/issues).
+For bug reports and feature requests, please use [GitHub Issues](https://github.com/sorkin19822/wordpress-test-task/issues).
 
 ## Author
 
-Created as a test assignment for WordPress Developer position.
+Oleksandr - WordPress Developer test assignment.
 
 ---
 

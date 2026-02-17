@@ -99,4 +99,4 @@ Download the ZIP file from GitHub Releases and install via WordPress admin.
 
 ---
 
-[1.0.0]: https://github.com/yourusername/wp-product-plugin/releases/tag/v1.0.0
+[1.0.0]: https://github.com/sorkin19822/wordpress-test-task/releases/tag/v1.0.0
