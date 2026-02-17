@@ -6,6 +6,7 @@
 # Note: if you want to stage/commit WP core files
 # you can delete this whole section/until Configuration.
 /wp-admin/
+/temp
 /wp-content/index.php
 /wp-content/languages
 /wp-content/plugins/index.php
@@ -14,7 +15,19 @@
 /index.php
 /license.txt
 /readme.html
-/wp-*.php
+/wp-admin.php
+/wp-blog-header.php
+/wp-comments-post.php
+/wp-config-sample.php
+/wp-cron.php
+/wp-links-opml.php
+/wp-load.php
+/wp-login.php
+/wp-mail.php
+/wp-settings.php
+/wp-signup.php
+/wp-trackback.php
+# But NOT our plugin file: wp-product-plugin.php
 /xmlrpc.php
 
 # Configuration
@@ -35,6 +48,21 @@ wp-config.php
 # htaccess
 /.htaccess
 
+# Docker
+.env
+docker-compose.override.yml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
 # All plugins
 #
 # Note: If you wish to whitelist plugins,
@@ -46,3 +74,4 @@ wp-config.php
 # Note: If you wish to whitelist themes,
 # uncomment the next line
 #/wp-content/themes
+/.claude/
