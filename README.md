@@ -140,8 +140,8 @@ wp-product-plugin/
 3. Commit changes
 4. Create and push a tag:
    ```bash
-   git tag -a v1.0.0 -m "Release version 1.0.0"
-   git push origin v1.0.0
+   git tag -a v1.1.0 -m "Release version 1.1.0"
+   git push origin v1.1.0
    ```
 5. GitHub Actions will automatically create a release with ZIP file
 

@@ -32,14 +32,23 @@ class WP_Product_Plugin_AJAX {
 	private $cpt;
 
 	/**
+	 * Shortcodes handler instance.
+	 *
+	 * @var WP_Product_Plugin_Shortcodes
+	 */
+	private $shortcodes;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param WP_Product_Plugin_API $api API handler instance.
-	 * @param WP_Product_Plugin_CPT $cpt CPT handler instance.
+	 * @param WP_Product_Plugin_API        $api        API handler instance.
+	 * @param WP_Product_Plugin_CPT        $cpt        CPT handler instance.
+	 * @param WP_Product_Plugin_Shortcodes $shortcodes Shortcodes handler instance.
 	 */
-	public function __construct( $api, $cpt ) {
-		$this->api = $api;
-		$this->cpt = $cpt;
+	public function __construct( $api, $cpt, $shortcodes ) {
+		$this->api        = $api;
+		$this->cpt        = $cpt;
+		$this->shortcodes = $shortcodes;
 	}
 
 	/**
@@ -71,12 +80,8 @@ class WP_Product_Plugin_AJAX {
 			);
 		}
 
-		// Load shortcodes class to use render method.
-		require_once WP_PRODUCT_PLUGIN_PATH . 'public/class-wp-product-plugin-shortcodes.php';
-		$shortcodes = new WP_Product_Plugin_Shortcodes( $this->api );
-
 		// Render product card with post link.
-		$html = $shortcodes->render_product_card( $product, true, $post_id );
+		$html = $this->shortcodes->render_product_card( $product, true, $post_id );
 
 		// Send success response.
 		wp_send_json_success(

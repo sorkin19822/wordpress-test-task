@@ -6,8 +6,8 @@ WordPress plugin integrating FakeStore API with Custom Post Type, AJAX functiona
 
 **Assignment:** WordPress Developer Test Task - Variant 2 (Advanced)
 **Status:** ✅ **COMPLETE**
-**Version:** 1.0.0
-**Completion Date:** 2026-02-17
+**Version:** 1.1.0
+**Completion Date:** 2026-02-18
 
 ---
 
@@ -143,7 +143,7 @@ Display product card with post link
   - Rating (rate + count)
 
 ### 2. Custom Post Type
-- **Post Type:** `product`
+- **Post Type:** `wpp_product`
 - **Public:** Yes (archive, single pages)
 - **Supports:** Title, Editor, Thumbnail, Custom Fields
 - **Meta Fields:**
@@ -376,9 +376,10 @@ Display product card with post link
 
 **Repository:** https://github.com/sorkin19822/wordpress-test-task
 **License:** GPL-2.0+
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Author:** WordPress Developer Test Assignment
 **Created:** 2026-02-17
+**Updated:** 2026-02-18
 
 ---
 
@@ -396,7 +397,7 @@ The plugin demonstrates:
 - Modern development practices (Docker, CI/CD)
 - Attention to detail and code quality
 
-**Next step:** Create git tag `v1.0.0` to trigger automated release.
+**Next step:** Create git tag `v1.1.0` to trigger automated release.
 
 ---
 

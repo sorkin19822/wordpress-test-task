@@ -22,7 +22,7 @@ class WP_Product_Plugin_CPT {
 	 *
 	 * @var string
 	 */
-	const POST_TYPE = 'product';
+	const POST_TYPE = 'wpp_product';
 
 	/**
 	 * Register the Custom Post Type.

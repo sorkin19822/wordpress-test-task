@@ -100,13 +100,13 @@ class WP_Product_Plugin {
 			$this->admin = new WP_Product_Plugin_Admin();
 		}
 
-		// AJAX handler.
-		require_once WP_PRODUCT_PLUGIN_PATH . 'includes/class-wp-product-plugin-ajax.php';
-		$this->ajax = new WP_Product_Plugin_AJAX( $this->api, $this->cpt );
-
 		// Shortcodes.
 		require_once WP_PRODUCT_PLUGIN_PATH . 'public/class-wp-product-plugin-shortcodes.php';
 		$this->shortcodes = new WP_Product_Plugin_Shortcodes( $this->api );
+
+		// AJAX handler.
+		require_once WP_PRODUCT_PLUGIN_PATH . 'includes/class-wp-product-plugin-ajax.php';
+		$this->ajax = new WP_Product_Plugin_AJAX( $this->api, $this->cpt, $this->shortcodes );
 	}
 
 	/**

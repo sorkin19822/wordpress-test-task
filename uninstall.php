@@ -20,7 +20,7 @@ delete_option( 'wp_product_plugin_settings' );
  */
 $products = get_posts(
 	array(
-		'post_type'      => 'product',
+		'post_type'      => 'wpp_product',
 		'posts_per_page' => -1,
 		'post_status'    => 'any',
 	)

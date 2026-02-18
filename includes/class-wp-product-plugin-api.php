@@ -143,9 +143,11 @@ class WP_Product_Plugin_API {
 			// Clear all product caches.
 			global $wpdb;
 			$wpdb->query(
-				"DELETE FROM {$wpdb->options}
-				WHERE option_name LIKE '_transient_wp_product_plugin_product_%'
-				OR option_name LIKE '_transient_timeout_wp_product_plugin_product_%'"
+				$wpdb->prepare(
+					"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+					$wpdb->esc_like( '_transient_wp_product_plugin_product_' ) . '%',
+					$wpdb->esc_like( '_transient_timeout_wp_product_plugin_product_' ) . '%'
+				)
 			);
 		}
 	}

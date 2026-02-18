@@ -3,7 +3,7 @@
  * Plugin Name: WP Product Plugin
  * Plugin URI: https://github.com/sorkin19822/wordpress-test-task
  * Description: Integration with FakeStore API to display products via shortcodes with AJAX support and Custom Post Type storage.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Oleksandr
  * Author URI: https://github.com/sorkin19822
  * License: GPL-2.0+
@@ -22,7 +22,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Currently plugin version.
  */
-define( 'WP_PRODUCT_PLUGIN_VERSION', '1.0.0' );
+define( 'WP_PRODUCT_PLUGIN_VERSION', '1.1.0' );
 
 /**
  * Plugin directory path.
