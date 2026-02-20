@@ -24,7 +24,7 @@ class WP_Product_Plugin_Deactivator {
 	 *
 	 * @since 1.0.0
 	 */
-	public static function deactivate() {
+	public static function deactivate(): void {
 		// Flush rewrite rules.
 		flush_rewrite_rules();
 	}

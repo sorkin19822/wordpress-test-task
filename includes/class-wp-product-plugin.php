@@ -13,88 +13,99 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * The core plugin class.
  *
- * This is used to define internationalization, admin-specific hooks, and
- * public-facing site hooks.
+ * Wires dependencies together and registers WordPress hooks.
+ * Uses the Singleton pattern to guarantee a single instance.
+ * The constructor only stores the instance reference; all real
+ * initialisation happens in run() so that the object construction
+ * and plugin execution are clearly separated.
  */
 class WP_Product_Plugin {
 
 	/**
 	 * The single instance of the class.
+	 * Private — subclasses must not bypass the Singleton invariant.
 	 *
-	 * @var WP_Product_Plugin
+	 * @var WP_Product_Plugin|null
 	 */
-	protected static $instance = null;
+	private static ?WP_Product_Plugin $instance = null;
 
 	/**
-	 * Custom Post Type handler.
-	 *
 	 * @var WP_Product_Plugin_CPT
 	 */
-	protected $cpt;
+	private WP_Product_Plugin_CPT $cpt;
 
 	/**
-	 * API handler.
-	 *
 	 * @var WP_Product_Plugin_API
 	 */
-	protected $api;
+	private WP_Product_Plugin_API $api;
 
 	/**
-	 * Admin handler.
-	 *
-	 * @var WP_Product_Plugin_Admin
+	 * @var WP_Product_Plugin_Admin|null
 	 */
-	protected $admin;
+	private ?WP_Product_Plugin_Admin $admin = null;
 
 	/**
-	 * AJAX handler.
-	 *
 	 * @var WP_Product_Plugin_AJAX
 	 */
-	protected $ajax;
+	private WP_Product_Plugin_AJAX $ajax;
 
 	/**
-	 * Shortcodes handler.
-	 *
 	 * @var WP_Product_Plugin_Shortcodes
 	 */
-	protected $shortcodes;
+	private WP_Product_Plugin_Shortcodes $shortcodes;
 
 	/**
-	 * Main WP_Product_Plugin Instance.
-	 *
-	 * Ensures only one instance of WP_Product_Plugin is loaded or can be loaded.
-	 *
-	 * @return WP_Product_Plugin - Main instance.
+	 * @var WP_Product_Renderer
 	 */
-	public static function get_instance() {
-		if ( is_null( self::$instance ) ) {
+	private WP_Product_Renderer $renderer;
+
+	/**
+	 * Return (and lazily create) the single plugin instance.
+	 *
+	 * @return static
+	 */
+	public static function get_instance(): static {
+		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
 		return self::$instance;
 	}
 
 	/**
-	 * Constructor.
+	 * Private constructor — use get_instance().
 	 */
-	private function __construct() {
+	private function __construct() {}
+
+	/**
+	 * Bootstrap the plugin: load dependencies and register hooks.
+	 *
+	 * Called from the entry file (wp-product-plugin.php) on plugins_loaded.
+	 */
+	public function run(): void {
 		$this->load_dependencies();
 		$this->define_hooks();
 	}
 
 	/**
-	 * Load the required dependencies for this plugin.
+	 * Instantiate all dependency classes.
 	 */
-	private function load_dependencies() {
-		// Custom Post Type.
-		require_once WP_PRODUCT_PLUGIN_PATH . 'includes/class-wp-product-plugin-cpt.php';
-		$this->cpt = new WP_Product_Plugin_CPT();
+	private function load_dependencies(): void {
+		// Product model.
+		require_once WP_PRODUCT_PLUGIN_PATH . 'includes/class-wp-product.php';
+
+		// Shared renderer (no external dependencies).
+		require_once WP_PRODUCT_PLUGIN_PATH . 'includes/class-wp-product-renderer.php';
+		$this->renderer = new WP_Product_Renderer();
 
 		// API handler.
 		require_once WP_PRODUCT_PLUGIN_PATH . 'includes/class-wp-product-plugin-api.php';
 		$this->api = new WP_Product_Plugin_API();
 
-		// Admin area.
+		// CPT handler.
+		require_once WP_PRODUCT_PLUGIN_PATH . 'includes/class-wp-product-plugin-cpt.php';
+		$this->cpt = new WP_Product_Plugin_CPT();
+
+		// Admin area — loaded only in the admin context.
 		if ( is_admin() ) {
 			require_once WP_PRODUCT_PLUGIN_PATH . 'admin/class-wp-product-plugin-admin.php';
 			$this->admin = new WP_Product_Plugin_Admin();
@@ -102,46 +113,47 @@ class WP_Product_Plugin {
 
 		// Shortcodes.
 		require_once WP_PRODUCT_PLUGIN_PATH . 'public/class-wp-product-plugin-shortcodes.php';
-		$this->shortcodes = new WP_Product_Plugin_Shortcodes( $this->api );
+		$this->shortcodes = new WP_Product_Plugin_Shortcodes( $this->api, $this->renderer );
 
-		// AJAX handler.
+		// AJAX handler — renderer injected directly, no Shortcodes dependency.
 		require_once WP_PRODUCT_PLUGIN_PATH . 'includes/class-wp-product-plugin-ajax.php';
-		$this->ajax = new WP_Product_Plugin_AJAX( $this->api, $this->cpt, $this->shortcodes );
+		$this->ajax = new WP_Product_Plugin_AJAX( $this->api, $this->cpt, $this->renderer );
 	}
 
 	/**
-	 * Register all hooks.
+	 * Register all WordPress hooks.
 	 */
-	private function define_hooks() {
-		// CPT hooks.
+	private function define_hooks(): void {
+		// CPT registration.
 		add_action( 'init', array( $this->cpt, 'register_post_type' ) );
 
 		// Admin hooks.
-		if ( is_admin() && $this->admin ) {
+		if ( is_admin() && null !== $this->admin ) {
 			add_action( 'admin_menu', array( $this->admin, 'add_admin_menu' ) );
 			add_action( 'admin_init', array( $this->admin, 'register_settings' ) );
+
+			// Admin reacts to the product-created event fired by CPT.
+			add_action( 'wp_product_plugin_product_created', array( $this->admin, 'record_product_created_timestamp' ), 10, 1 );
 		}
 
-		// AJAX hooks.
+		// AJAX hooks — available to both logged-in users and guests.
 		add_action( 'wp_ajax_wp_product_plugin_get_random', array( $this->ajax, 'handle_get_random_product' ) );
 		add_action( 'wp_ajax_nopriv_wp_product_plugin_get_random', array( $this->ajax, 'handle_get_random_product' ) );
 
-		// Shortcode hooks.
+		// Shortcode registration.
 		add_action( 'init', array( $this->shortcodes, 'register_shortcodes' ) );
 
-		// Enqueue scripts.
+		// Frontend assets.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_public_assets' ) );
 	}
 
 	/**
 	 * Enqueue public-facing assets.
 	 */
-	public function enqueue_public_assets() {
-		// Get settings to check if enhanced styles are enabled.
-		$settings = get_option( 'wp_product_plugin_settings', array() );
-		$enhanced_styles = isset( $settings['enable_enhanced_styles'] ) ? $settings['enable_enhanced_styles'] : 1;
+	public function enqueue_public_assets(): void {
+		$settings        = get_option( 'wp_product_plugin_settings', array() );
+		$enhanced_styles = (bool) ( $settings['enable_enhanced_styles'] ?? true );
 
-		// Enqueue appropriate stylesheet.
 		if ( $enhanced_styles ) {
 			wp_enqueue_style(
 				'wp-product-plugin-enhanced',
@@ -174,12 +186,5 @@ class WP_Product_Plugin {
 				'nonce'   => wp_create_nonce( 'wp_product_plugin_nonce' ),
 			)
 		);
-	}
-
-	/**
-	 * Run the plugin.
-	 */
-	public function run() {
-		// Plugin is running.
 	}
 }

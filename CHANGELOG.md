@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-20
+
+### Architecture (major refactoring)
+- **Added `WP_Product` model class** (`includes/class-wp-product.php`): typed DTO with `from_api_array()` factory; all classes now receive a typed model instead of raw arrays — eliminates fragile `isset()` guards spread across four files
+- **Added `WP_Product_Renderer` class** (`includes/class-wp-product-renderer.php`): dedicated card renderer used by both Shortcodes and AJAX — removes the wrong coupling where AJAX called into the Shortcodes class to render HTML
+- **Refactored `WP_Product_Plugin_API`**: returns `WP_Product` model instead of raw array; added `MIN_PRODUCT_ID`/`MAX_PRODUCT_ID` constants (single source of truth for the 1–20 range); replaced raw SQL in `clear_cache()` with a `delete_transient()` loop (cache-layer-agnostic)
+- **Refactored `WP_Product_Plugin_CPT`**: accepts `WP_Product` model; removed `update_last_created_timestamp()` (settings concern moved to Admin via `do_action('wp_product_plugin_product_created')`); added `no_found_rows => true` and `fields => ids` to duplicate-check query; renamed `get_product_by_api_id()` to `get_post_id_by_api_id()` to reflect the return type
+- **Refactored `WP_Product_Plugin_AJAX`**: replaced `WP_Product_Plugin_Shortcodes` dependency with `WP_Product_Renderer`; added explicit `wp_die()` after every `wp_send_json_error()`; added per-IP rate limiting (20 req/60 s)
+- **Refactored `WP_Product_Plugin_Shortcodes`**: `render_product_card()` is now `private` (internal concern); constructor takes `WP_Product_Renderer` as second dependency
+- **Refactored main class `WP_Product_Plugin`**: all instance properties changed from `protected` to `private` (Singleton must not be subclassed); initialization moved from constructor into `run()` to separate object construction from plugin execution; plugin bootstrapped on `plugins_loaded` hook (proper deferred init)
+- **Added `record_product_created_timestamp()` to `WP_Product_Plugin_Admin`**: listens to `wp_product_plugin_product_created` action — keeps settings concerns out of the CPT class
+- **Admin `sanitize_settings()`**: now references `WP_Product_Plugin_API::MIN_PRODUCT_ID` / `MAX_PRODUCT_ID` constants instead of hardcoded literals
+
+### Security
+- **SSRF protection** (`class-wp-product-plugin-cpt.php`): URL scheme validated (`http`/`https` only) before `download_url()` is called on API image URLs
+- **XSS hardening** (`assets/js/public.js`): error messages now inserted via `.text()` instead of HTML string concatenation; added per-container loading guard to prevent concurrent requests
+- **`esc_html()`** applied to AJAX error messages server-side before JSON encoding
+- **`wp_die()`** added explicitly after every `wp_send_json_error()` call (belt-and-suspenders, safe on WP < 5.5)
+- **Rate limiting** on the `nopriv` AJAX endpoint (transient-based, per hashed IP)
+- **`wp_delete_file()`** replaces `@unlink` — no error suppression, respects WP filesystem abstraction
+- **`ABSPATH` guard** in `wp-product-plugin.php` (was `WPINC` — now consistent with all other files)
+- **`render_settings_page()`** calls `wp_die()` on capability failure instead of silently returning
+
+### Bug Fixes
+- `current_time('timestamp')` (deprecated since WP 5.3) replaced with `time()` in `human_time_diff()` call
+- `Requires PHP: 8.0` added to plugin header (union types `T|U` require PHP 8.0+; previously missing)
+- Uninstall now batches deletions in groups of 100 to prevent memory exhaustion on large sites
+- Uninstall uses a local constant instead of attempting to bootstrap the plugin
+
+### Code Quality
+- Added `languages/` directory (Text Domain and Domain Path were declared but the directory was missing)
+- Fixed `temp/` `.gitignore` pattern from `/temp` (root-only) to `temp/` (any depth)
+
+---
+
 ## [1.1.0] - 2026-02-18
 
 ### Fixed
@@ -59,61 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## Release Notes
-
-### Version 1.0.0 - Initial Release
-
-This is the first stable release of WP Product Plugin, created as a test assignment for a WordPress Developer position.
-
-**Key Features:**
-- FakeStore API integration with 20 sample products
-- Two shortcodes for different use cases
-- AJAX-powered random product loading
-- Custom Post Type with full metadata
-- Admin interface for configuration
-- Automatic release creation via GitHub Actions
-
-**Requirements:**
-- WordPress 5.0+
-- PHP 7.4+
-- MySQL 5.6+
-
-**Installation:**
-Download the ZIP file from GitHub Releases and install via WordPress admin.
-
----
-
-## Future Roadmap (Potential Features)
-
-### Version 1.1.0 (Released)
-- [x] CPT slug renamed to `wpp_product` (WooCommerce compatibility)
-- [x] Safe uninstall — only `wpp_product` posts are removed
-- [x] SQL hardened with `$wpdb->prepare()` in cache clearing
-- [x] AJAX dependency injection — eliminated duplicate shortcodes instance
-
-### Version 1.2.0 (Planned)
-- [ ] Product categories taxonomy
-- [ ] Search and filter products in admin
-- [ ] Bulk import from API
-- [ ] Custom product template override
-- [ ] Widget for random product display
-
-### Version 1.3.0 (Planned)
-- [ ] Integration with WooCommerce
-- [ ] Product comparison feature
-- [ ] Wishlist functionality
-- [ ] Product reviews system
-- [ ] Multi-language support (WPML compatibility)
-
-### Version 2.0.0 (Planned — roadmap)
-- [ ] Support for multiple API sources
-- [ ] Advanced caching strategies
-- [ ] REST API endpoints
-- [ ] GraphQL support
-- [ ] Performance optimizations
-- [ ] Unit and integration tests
-
----
-
-[1.1.0]: https://github.com/sorkin19822/wordpress-test-task/releases/tag/v1.1.0
-[1.0.0]: https://github.com/sorkin19822/wordpress-test-task/releases/tag/v1.0.0
+[1.2.0]: ../../releases/tag/v1.2.0
+[1.1.0]: ../../releases/tag/v1.1.0
+[1.0.0]: ../../releases/tag/v1.0.0

@@ -13,21 +13,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Custom Post Type handler class.
  *
- * Registers and manages the Product custom post type.
+ * Responsibilities: CPT registration and CPT post CRUD.
+ * Settings writes and media-download orchestration belong elsewhere.
  */
 class WP_Product_Plugin_CPT {
 
 	/**
-	 * Post type name.
+	 * Post type slug.
+	 * Must match the constant in wp-product-plugin.php so uninstall.php
+	 * can reference a single source of truth.
 	 *
 	 * @var string
 	 */
-	const POST_TYPE = 'wpp_product';
+	const POST_TYPE = WP_PRODUCT_PLUGIN_POST_TYPE;
 
 	/**
 	 * Register the Custom Post Type.
 	 */
-	public function register_post_type() {
+	public function register_post_type(): void {
 		$labels = array(
 			'name'                  => _x( 'Products', 'Post Type General Name', 'wp-product-plugin' ),
 			'singular_name'         => _x( 'Product', 'Post Type Singular Name', 'wp-product-plugin' ),
@@ -83,39 +86,35 @@ class WP_Product_Plugin_CPT {
 	}
 
 	/**
-	 * Create a product post from API data.
+	 * Create a product post from a WP_Product model.
 	 *
-	 * @param array $product_data Product data from FakeStore API.
+	 * If a post for this API product already exists, returns its ID without
+	 * creating a duplicate. On success fires the 'wp_product_plugin_product_created'
+	 * action so other components (e.g. Admin) can react without CPT knowing about them.
+	 *
+	 * @param WP_Product $product Product model.
 	 * @return int|WP_Error Post ID on success, WP_Error on failure.
 	 */
-	public function create_product( $product_data ) {
-		if ( empty( $product_data ) || ! is_array( $product_data ) ) {
-			return new WP_Error( 'invalid_data', __( 'Invalid product data', 'wp-product-plugin' ) );
+	public function create_product( WP_Product $product ): int|WP_Error {
+		// Return existing post ID to prevent duplicates.
+		$existing_id = $this->get_post_id_by_api_id( $product->id );
+		if ( $existing_id > 0 ) {
+			return $existing_id;
 		}
 
-		// Check if product already exists by API ID.
-		$existing_post = $this->get_product_by_api_id( $product_data['id'] );
-		if ( $existing_post ) {
-			return $existing_post->ID;
-		}
-
-		// Prepare post data.
-		$post_title = isset( $product_data['title'] ) ? sanitize_text_field( $product_data['title'] ) : '';
-		$post_content = isset( $product_data['description'] ) ? wp_kses_post( $product_data['description'] ) : '';
-
-		// Create the post.
+		// Insert the post.
 		$post_id = wp_insert_post(
 			array(
 				'post_type'    => self::POST_TYPE,
-				'post_title'   => $post_title,
-				'post_content' => $post_content,
+				'post_title'   => $product->title,
+				'post_content' => $product->description,
 				'post_status'  => 'publish',
 				'meta_input'   => array(
-					'_product_api_id' => absint( $product_data['id'] ),
-					'_product_price'  => isset( $product_data['price'] ) ? floatval( $product_data['price'] ) : 0,
-					'_product_category' => isset( $product_data['category'] ) ? sanitize_text_field( $product_data['category'] ) : '',
-					'_product_rating_rate' => isset( $product_data['rating']['rate'] ) ? floatval( $product_data['rating']['rate'] ) : 0,
-					'_product_rating_count' => isset( $product_data['rating']['count'] ) ? absint( $product_data['rating']['count'] ) : 0,
+					'_product_api_id'       => $product->id,
+					'_product_price'        => $product->price,
+					'_product_category'     => $product->category,
+					'_product_rating_rate'  => $product->rating_rate,
+					'_product_rating_count' => $product->rating_count,
 				),
 			)
 		);
@@ -124,90 +123,89 @@ class WP_Product_Plugin_CPT {
 			return $post_id;
 		}
 
-		// Download and set featured image.
-		if ( ! empty( $product_data['image'] ) ) {
-			$this->set_featured_image( $post_id, $product_data['image'] );
+		// Download and attach the featured image.
+		if ( ! empty( $product->image ) ) {
+			$this->set_featured_image( $post_id, $product->image );
 		}
 
-		// Update last created timestamp.
-		$this->update_last_created_timestamp();
+		/**
+		 * Fires after a new product post is created from the API.
+		 *
+		 * @param int        $post_id  The newly created post ID.
+		 * @param WP_Product $product  The product model.
+		 */
+		do_action( 'wp_product_plugin_product_created', $post_id, $product );
 
 		return $post_id;
 	}
 
 	/**
-	 * Get product post by API ID.
+	 * Get the post ID for a given API product ID.
+	 *
+	 * Optimized with 'fields' => 'ids' (no full object fetch) and
+	 * 'no_found_rows' => true (no SQL_CALC_FOUND_ROWS) since we only
+	 * need to know whether a post exists.
 	 *
 	 * @param int $api_id API product ID.
-	 * @return WP_Post|null Post object or null if not found.
+	 * @return int Post ID, or 0 if not found.
 	 */
-	public function get_product_by_api_id( $api_id ) {
-		$args = array(
-			'post_type'      => self::POST_TYPE,
-			'post_status'    => 'publish',
-			'posts_per_page' => 1,
-			'meta_key'       => '_product_api_id',
-			'meta_value'     => absint( $api_id ),
+	public function get_post_id_by_api_id( int $api_id ): int {
+		$query = new WP_Query(
+			array(
+				'post_type'      => self::POST_TYPE,
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				'meta_key'       => '_product_api_id',
+				'meta_value'     => absint( $api_id ),
+			)
 		);
 
-		$query = new WP_Query( $args );
-
-		if ( $query->have_posts() ) {
-			return $query->posts[0];
-		}
-
-		return null;
+		return ! empty( $query->posts ) ? (int) $query->posts[0] : 0;
 	}
 
 	/**
-	 * Download and set featured image from URL.
+	 * Download image from URL and set it as the post featured image.
 	 *
-	 * @param int    $post_id Post ID.
-	 * @param string $image_url Image URL.
+	 * @param int    $post_id   Post ID.
+	 * @param string $image_url Remote image URL.
 	 * @return int|false Attachment ID on success, false on failure.
 	 */
-	private function set_featured_image( $post_id, $image_url ) {
+	private function set_featured_image( int $post_id, string $image_url ): int|false {
+		// Validate URL scheme to prevent SSRF via crafted image URLs in the API response.
+		$scheme = wp_parse_url( $image_url, PHP_URL_SCHEME );
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+			return false;
+		}
+
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
-		// Download image to temp file.
 		$temp_file = download_url( $image_url );
 
 		if ( is_wp_error( $temp_file ) ) {
 			return false;
 		}
 
-		// Prepare file array.
 		$file = array(
-			'name'     => basename( $image_url ),
+			'name'     => basename( wp_parse_url( $image_url, PHP_URL_PATH ) ),
 			'tmp_name' => $temp_file,
 		);
 
-		// Upload the file.
 		$attachment_id = media_handle_sideload( $file, $post_id );
 
-		// Clean up temp file.
-		if ( file_exists( $temp_file ) ) {
-			@unlink( $temp_file );
-		}
+		// Always clean up the temp file — use wp_delete_file() which handles
+		// the filesystem abstraction and avoids the @ error-suppression operator.
+		wp_delete_file( $temp_file );
 
 		if ( is_wp_error( $attachment_id ) ) {
 			return false;
 		}
 
-		// Set as featured image.
 		set_post_thumbnail( $post_id, $attachment_id );
 
 		return $attachment_id;
-	}
-
-	/**
-	 * Update last created timestamp in settings.
-	 */
-	private function update_last_created_timestamp() {
-		$settings = get_option( 'wp_product_plugin_settings', array() );
-		$settings['last_created_at'] = current_time( 'mysql' );
-		update_option( 'wp_product_plugin_settings', $settings );
 	}
 }
