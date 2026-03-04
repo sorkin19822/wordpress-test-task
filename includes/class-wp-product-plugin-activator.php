@@ -39,5 +39,55 @@ class WP_Product_Plugin_Activator {
 				'enable_enhanced_styles' => 1,
 			)
 		);
+
+		self::insert_cache_rules();
+	}
+
+	/**
+	 * Insert browser-cache rules into .htaccess using WordPress markers.
+	 *
+	 * Uses insert_with_markers() so the block is clearly delimited and
+	 * never conflicts with the WordPress rewrite block. Safe to call on
+	 * every activation — existing rules are simply replaced.
+	 */
+	public static function insert_cache_rules(): void {
+		if ( ! function_exists( 'insert_with_markers' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/misc.php';
+		}
+
+		$htaccess = get_home_path() . '.htaccess';
+
+		$rules = array(
+			'<IfModule mod_expires.c>',
+			'    ExpiresActive On',
+			'    ExpiresByType image/jpeg            "access plus 1 year"',
+			'    ExpiresByType image/png             "access plus 1 year"',
+			'    ExpiresByType image/webp            "access plus 1 year"',
+			'    ExpiresByType image/gif             "access plus 1 year"',
+			'    ExpiresByType image/svg+xml         "access plus 1 year"',
+			'    ExpiresByType image/x-icon          "access plus 1 year"',
+			'    ExpiresByType font/woff2            "access plus 1 year"',
+			'    ExpiresByType font/woff             "access plus 1 year"',
+			'    ExpiresByType font/ttf              "access plus 1 year"',
+			'    ExpiresByType application/font-woff2 "access plus 1 year"',
+			'    ExpiresByType text/css              "access plus 1 year"',
+			'    ExpiresByType application/javascript "access plus 1 year"',
+			'    ExpiresByType text/javascript       "access plus 1 year"',
+			'    ExpiresByType text/html             "access plus 0 seconds"',
+			'</IfModule>',
+			'<IfModule mod_headers.c>',
+			'    <FilesMatch "\.(jpe?g|png|webp|gif|svg|ico)$">',
+			'        Header set Cache-Control "public, max-age=31536000, immutable"',
+			'    </FilesMatch>',
+			'    <FilesMatch "\.(woff2?|ttf|otf|eot)$">',
+			'        Header set Cache-Control "public, max-age=31536000, immutable"',
+			'    </FilesMatch>',
+			'    <FilesMatch "\.(css|js)$">',
+			'        Header set Cache-Control "public, max-age=31536000, immutable"',
+			'    </FilesMatch>',
+			'</IfModule>',
+		);
+
+		insert_with_markers( $htaccess, 'WPP Cache-Control', $rules );
 	}
 }

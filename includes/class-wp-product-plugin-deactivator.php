@@ -25,7 +25,18 @@ class WP_Product_Plugin_Deactivator {
 	 * @since 1.0.0
 	 */
 	public static function deactivate(): void {
-		// Flush rewrite rules.
 		flush_rewrite_rules();
+		self::remove_cache_rules();
+	}
+
+	/**
+	 * Remove the cache rules block written by the activator.
+	 */
+	public static function remove_cache_rules(): void {
+		if ( ! function_exists( 'insert_with_markers' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/misc.php';
+		}
+
+		insert_with_markers( get_home_path() . '.htaccess', 'WPP Cache-Control', array() );
 	}
 }
