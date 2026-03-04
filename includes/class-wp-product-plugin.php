@@ -146,6 +146,17 @@ class WP_Product_Plugin {
 		// Frontend assets.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_public_assets' ) );
 
+		// Intermediate image size for grid cells (~540 px fills the 200→683 gap).
+		add_action( 'init', array( $this, 'register_image_sizes' ) );
+
+		// Reduce WebP quality from 82 → 72 for smaller file sizes.
+		add_filter( 'wp_editor_set_quality', array( $this, 'set_webp_quality' ), 10, 2 );
+
+		// Regenerate the wpp-grid size for existing attachments (once).
+		if ( is_admin() ) {
+			add_action( 'admin_init', array( $this, 'maybe_regenerate_grid_thumbnails' ) );
+		}
+
 		// srcset/sizes for content images that lack responsive attributes (runs before lazy loading).
 		add_filter( 'the_content', array( $this, 'add_srcset_to_content_images' ), 9 );
 
@@ -162,6 +173,63 @@ class WP_Product_Plugin {
 		if ( is_admin() ) {
 			add_action( 'admin_init', array( $this, 'maybe_bulk_generate_webp' ) );
 		}
+	}
+
+	/**
+	 * Register a custom image size that fills the gap between WordPress's
+	 * built-in medium (300 px) and medium_large (768 px) sizes.
+	 *
+	 * Without this size, a browser requesting ~400-530 px (e.g. a 204 px cell
+	 * at 2× DPR) falls back to the 683/768 px variant — ~2-3× larger than needed.
+	 * With wpp-grid at 540 px the browser picks 540 w instead, saving ~40%.
+	 */
+	public function register_image_sizes(): void {
+		add_image_size( 'wpp-grid', 540, 0, false );
+	}
+
+	/**
+	 * Reduce WebP encoding quality to 72 (WordPress default: 82).
+	 *
+	 * At quality 72 WebP files are ~15% smaller with no perceptible quality
+	 * loss at grid-cell display sizes (≤540 px).
+	 *
+	 * @param int    $quality   Current quality value.
+	 * @param string $mime_type MIME type being encoded.
+	 * @return int
+	 */
+	public function set_webp_quality( int $quality, string $mime_type ): int {
+		return 'image/webp' === $mime_type ? 72 : $quality;
+	}
+
+	/**
+	 * Generate the wpp-grid thumbnail size for all existing attachments.
+	 *
+	 * Runs once on admin_init (guarded by a transient so it never repeats).
+	 * After generating the JPEG/PNG crop it immediately creates a WebP copy
+	 * at the reduced quality set by set_webp_quality().
+	 */
+	public function maybe_regenerate_grid_thumbnails(): void {
+		if ( get_transient( 'wpp_grid_size_generated' ) ) {
+			return;
+		}
+
+		$ids = get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'post_mime_type' => array( 'image/jpeg', 'image/png' ),
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
+
+		foreach ( $ids as $id ) {
+			// wp_update_image_subsizes() adds only missing sizes — safe to call repeatedly.
+			wp_update_image_subsizes( $id );
+			// Regenerate WebP for any newly created size files.
+			$this->generate_webp_for_attachment( $id );
+		}
+
+		set_transient( 'wpp_grid_size_generated', true, 0 );
 	}
 
 	/**
@@ -227,11 +295,11 @@ class WP_Product_Plugin {
 					return $tag;
 				}
 
-				// sizes tuned for CSS grid: repeat(auto-fill, minmax(180px, 1fr)).
-				// — large viewports  : ~204 px per cell (observed)
-				// — medium viewports : ~25 vw (4 columns)
-				// — small viewports  : ~50 vw (2 columns)
-				$sizes = '(min-width: 1200px) 204px, (min-width: 640px) calc(25vw - 24px), calc(50vw - 24px)';
+				// sizes for CSS grid repeat(auto-fill,minmax(180px,1fr)) inside the
+				// ~645 px constrained content area (Twenty Twenty-Five defaults):
+				// > 1024 px viewport: 3 columns -> (645-32)/3 ~= 204 px per cell
+				// < 1024 px         : 2 columns -> calc(50vw - 24px)
+				$sizes = '(min-width: 1024px) 204px, calc(50vw - 24px)';
 
 				$tag = preg_replace(
 					'/(<img\s)/i',
