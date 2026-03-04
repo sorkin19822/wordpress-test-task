@@ -146,8 +146,92 @@ class WP_Product_Plugin {
 		// Frontend assets.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_public_assets' ) );
 
+		// srcset/sizes for content images that lack responsive attributes (runs before lazy loading).
+		add_filter( 'the_content', array( $this, 'add_srcset_to_content_images' ), 9 );
+
 		// Lazy loading for content images missing width/height attributes.
 		add_filter( 'the_content', array( $this, 'add_lazy_loading_to_content_images' ) );
+	}
+
+	/**
+	 * Add srcset and sizes to images in post content that lack responsive attributes.
+	 *
+	 * WordPress generates multiple image sizes on upload but only injects srcset
+	 * when images are output via wp_get_attachment_image(). Images hardcoded in
+	 * post content (e.g. plain <img src="…-1024x768.jpg">) are skipped.
+	 *
+	 * This filter:
+	 *  1. Strips the WP size suffix from the URL to find the original attachment.
+	 *  2. Looks up the attachment ID (result cached per request via wp_cache).
+	 *  3. Uses wp_get_attachment_image_srcset() to build the srcset string.
+	 *  4. Applies a sizes attribute tuned to the auto-fill grid (minmax(180px,1fr)).
+	 *
+	 * @param string $content Post content HTML.
+	 * @return string Modified HTML.
+	 */
+	public function add_srcset_to_content_images( string $content ): string {
+		if ( ! str_contains( $content, '<img' ) ) {
+			return $content;
+		}
+
+		return preg_replace_callback(
+			'/<img\s[^>]*>/i',
+			function ( array $matches ): string {
+				$tag = $matches[0];
+
+				// Skip images that already have responsive attributes.
+				if ( preg_match( '/\bsrcset\s*=/i', $tag ) ) {
+					return $tag;
+				}
+
+				// Extract src value.
+				if ( ! preg_match( '/\bsrc\s*=\s*["\']([^"\']+)["\']/', $tag, $src_match ) ) {
+					return $tag;
+				}
+
+				// Resolve relative URLs — attachment_url_to_postid() requires an absolute URL.
+				$src = $src_match[1];
+				if ( str_starts_with( $src, '/' ) && ! str_starts_with( $src, '//' ) ) {
+					$src = home_url( $src );
+				}
+
+				// Strip the WP size suffix (e.g. -1024x768) to get the original URL
+				// that attachment_url_to_postid() can resolve.
+				$original_url  = preg_replace( '/-\d+x\d+(\.[^.?#]+)$/', '$1', $src );
+				$cache_key     = md5( $original_url );
+				$attachment_id = wp_cache_get( $cache_key, 'wpp_img_ids' );
+
+				if ( false === $attachment_id ) {
+					$attachment_id = attachment_url_to_postid( $original_url );
+					wp_cache_set( $cache_key, $attachment_id, 'wpp_img_ids' );
+				}
+
+				if ( ! $attachment_id ) {
+					return $tag;
+				}
+
+				$srcset = wp_get_attachment_image_srcset( $attachment_id );
+
+				if ( ! $srcset ) {
+					return $tag;
+				}
+
+				// sizes tuned for CSS grid: repeat(auto-fill, minmax(180px, 1fr)).
+				// — large viewports  : ~204 px per cell (observed)
+				// — medium viewports : ~25 vw (4 columns)
+				// — small viewports  : ~50 vw (2 columns)
+				$sizes = '(min-width: 1200px) 204px, (min-width: 640px) calc(25vw - 24px), calc(50vw - 24px)';
+
+				$tag = preg_replace(
+					'/(<img\s)/i',
+					'$1srcset="' . esc_attr( $srcset ) . '" sizes="' . esc_attr( $sizes ) . '" ',
+					$tag
+				);
+
+				return $tag;
+			},
+			$content
+		);
 	}
 
 	/**
