@@ -145,6 +145,54 @@ class WP_Product_Plugin {
 
 		// Frontend assets.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_public_assets' ) );
+
+		// Lazy loading for content images missing width/height attributes.
+		add_filter( 'the_content', array( $this, 'add_lazy_loading_to_content_images' ) );
+	}
+
+	/**
+	 * Add loading="lazy" to images in post content that lack the attribute.
+	 *
+	 * WordPress 5.5+ sets lazy loading automatically, but only when both
+	 * width and height attributes are present. Images without those attributes
+	 * are skipped. This filter covers that gap.
+	 *
+	 * The very first <img> in the content is treated as a potential LCP element
+	 * and gets loading="eager" + fetchpriority="high" instead.
+	 *
+	 * @param string $content Post content HTML.
+	 * @return string Modified HTML.
+	 */
+	public function add_lazy_loading_to_content_images( string $content ): string {
+		if ( ! str_contains( $content, '<img' ) ) {
+			return $content;
+		}
+
+		$index = 0;
+
+		return preg_replace_callback(
+			'/<img\s[^>]*>/i',
+			function ( array $matches ) use ( &$index ): string {
+				$tag = $matches[0];
+
+				// Skip images that already have a loading attribute set explicitly.
+				if ( preg_match( '/\bloading\s*=/i', $tag ) ) {
+					++$index;
+					return $tag;
+				}
+
+				if ( 0 === $index ) {
+					// First image: eager load as potential LCP element.
+					$tag = preg_replace( '/(<img\s)/i', '$1loading="eager" fetchpriority="high" ', $tag );
+				} else {
+					$tag = preg_replace( '/(<img\s)/i', '$1loading="lazy" ', $tag );
+				}
+
+				++$index;
+				return $tag;
+			},
+			$content
+		);
 	}
 
 	/**
